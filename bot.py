@@ -1,6 +1,8 @@
 import asyncio
 import json
 import logging
+import time
+
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters.command import Command
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
@@ -74,11 +76,13 @@ async def feedback(message: types.Message):
 
 @dp.message(lambda message: message.text.isdigit() and 1 <= int(message.text) <= 5)
 async def callbacks_num_change_fab(message: types.Message):
-    user_id = message.from_user.id
-    rating = int(message.text)
+    # user_id = message.from_user.id
+    timestamp = int(time.time())
+    rating = message.text
 
     # Save the feedback in the dictionary
-    feedback_ratings[user_id] = rating
+    feedback_ratings[timestamp] = rating
+    print(feedback_ratings)
 
     # Save the feedback dictionary to the JSON file
     with open(json_file, 'w') as file:
@@ -90,9 +94,16 @@ async def callbacks_num_change_fab(message: types.Message):
 async def feedback_stats(message: types.Message):
     with open(json_file, 'r') as file:
         feedback_ratings = json.load(file)
-    val_rating = list(feedback_ratings.values())
+    print(feedback_ratings)
+    n = 0
+    summ = 0
+    for i in feedback_ratings.values():
+        n+=1
+        summ+=int(i)
+    # val_rating = list(feedback_ratings.values())
+    # print(val_rating)
     await message.answer(
-        f"Средняя оценка сервиса: {sum(val_rating)/len(val_rating) if len(val_rating)>0 else 0}",
+        f"Средняя оценка сервиса: {summ/n if n>0 else 0:0.2f}",
     )
 
 async def main():
