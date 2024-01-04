@@ -10,13 +10,12 @@ from magic_filter import F
 from typing import Optional
 from aiogram.filters.callback_data import CallbackData
 
-# from config_reader import config
+from config_reader import config
 
 # Включаем логирование, чтобы не пропустить важные сообщения
 logging.basicConfig(level=logging.INFO)
 
-# bot = Bot(token=config.bot_token.get_secret_value())
-bot = Bot(token='6961024788:AAF6TeMDf-suyWIQDjujs7o51b_lCf8nmgI')
+bot = Bot(token=config.bot_token.get_secret_value())
 # Диспетчер
 dp = Dispatcher()
 
