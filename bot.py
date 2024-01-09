@@ -2,7 +2,6 @@ import asyncio
 import json
 import logging
 import time
-from io import BytesIO
 
 import pandas as pd
 
@@ -119,33 +118,23 @@ async def callbacks_predictors(callback: types.CallbackQuery):
 
 @dp.message(F.document)
 async def handle_file(message: types.Message):
-    print(message.document)
     if message.document.mime_type == 'text/csv':
-        # file_id = message.document.file_id
-        # file_info = await bot.get_file(file_id)
         file_bytes = await bot.download(message.document)
 
         # Read CSV file using pandas
         df = pd.read_csv(file_bytes)
-        print(df)
-        print(df.columns)
-        # try:
-        item = prepare_data(df)
-        pred = predict(item)
-        # except:
-        #     await message.answer("Пожалуйста, приложите файл необходимого формата")
+        try:
+            item = prepare_data(df)
+            pred = predict(item)
+        except:
+            await message.answer("Пожалуйста, приложите файл необходимого формата")
 
-        # Make predictions using the ML model
-        # predictions = model.predict(df)
-
-        # Send the predictions back to the user
         if len(df) == 1:
-            result_message = f"Предсказанная стоимость автомобиля: {pred[0]} руб."
-            # await message.answer(result_message, parse_mode=ParseMode.MARKDOWN)
+            result_message = f"Предсказанная стоимость автомобиля {df['name'].values[0]}: {pred[0]:0.0f} руб."
         elif len(df) > 1:
-            result_message = 'Предсказанные стоимости автомобилей:'
+            result_message = 'Предсказанные стоимости автомобилей:\n'
             for i in range(len(df)):
-                result_message += f"{i + 1}: {pred[i]} руб.\n"
+                result_message += f"{df['name'].values[i]}: {pred[i]:0.0f} руб.\n"
         await message.answer(result_message, parse_mode=ParseMode.MARKDOWN)
     else:
         await message.answer("Пожалуйста, приложите файл необходимого формата")
@@ -172,7 +161,6 @@ async def callbacks_num_change_fab(callback: types.CallbackQuery, callback_data:
 
     feedback_ratings[user_id][timestamp] = rating
 
-    # Save the feedback dictionary to the JSON file
     with open(json_file, 'w') as file:
         json.dump(feedback_ratings, file)
     await callback.message.answer("Благодарю за отзыв!")
@@ -192,8 +180,6 @@ async def feedback_stats(message: types.Message):
             summ += int(j)
 
     users = set(users)
-    # val_rating = list(feedback_ratings.values())
-    # print(val_rating)
     await message.answer(
         f"Всего уникальных пользователей: {len(feedback_ratings.keys())}\nОценили сервис: {len(users)} юзеров\nСредняя оценка сервиса: {summ / n if n > 0 else 0:0.2f}",
     )
