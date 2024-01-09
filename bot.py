@@ -35,7 +35,7 @@ class NumbersCallbackFactory(CallbackData, prefix="fabnum"):
     value: Optional[int] = None
 
 
-class PredictorsCallbackFactory(CallbackData, prefix="fabnum"):
+class PredictorsCallbackFactory(CallbackData, prefix="fabpred"):
     action: str
     value: Optional[int] = None
 
@@ -90,8 +90,10 @@ async def cmd_special_buttons(message: types.Message):
 @dp.message(F.text.lower() == "как пользоваться этим сервисом")
 async def user_experiense(message: types.Message):
     text = 'Данный бот умеет:\n' \
-           '• делать предсказания по одному экземпляру-автомобилю, шаблон высылается\n' \
-           '• делать предсказания по батчу автомобилей'
+           '• делать предсказания по одному экземпляру-автомобилю (необходимые поля описаны)\n' \
+           '• делать предсказания по батчу автомобилей (необходимые поля описаны)\n' \
+           '• собирать статистику использования бота\n' \
+           '• отправлять собранную статистику использования бота'
 
     await message.answer(text, parse_mode=ParseMode.MARKDOWN)
 
@@ -100,7 +102,8 @@ async def user_experiense(message: types.Message):
 async def user_experiense(message: types.Message):
     builder = InlineKeyboardBuilder()
     for i in range(1, 3):
-        builder.button(text=str(i) if i == 1 else 'Более 1', callback_data="predict")
+        builder.button(text=str(i) if i == 1 else 'Более 1',
+                       callback_data=PredictorsCallbackFactory(action='predict', value=i))
     builder.adjust(2)
     await message.answer(
         "Предсказания для скольки автомобилей вы хотите сделать?",
@@ -108,15 +111,41 @@ async def user_experiense(message: types.Message):
     )
 
 
-@dp.callback_query(F.data == "predict")
-async def callbacks_predictors(callback: types.CallbackQuery):
-    if callback.message.text == '1':
+@dp.callback_query(PredictorsCallbackFactory.filter())
+async def callbacks_predictors(callback: types.CallbackQuery, callback_data: NumbersCallbackFactory):
+    if callback_data.value == 1:
         await callback.message.answer(
-            "Пришлите csv файл, в котором содержатся следующие данные об одном автомобиле:",
+            "Пришлите csv файл, в котором содержатся следующие данные об одном автомобиле:\n" \
+            "1. name: Имя автомобиля\n" \
+            "2. year: год выпуска\n" \
+            "3. km_driven: сколько километров проехала машина\n" \
+            "4. fuel: тип топлива ()\n" \
+            "5. seller_type: кто продает авто (Individual/Trustmark Dealer/Dealer)\n" \
+            "6. transmission: тип управления (Manual/Automatic)\n"
+            "7. owner: кто владеет автомобилем (First Owner/Second Owner/Third Owner/Fourth & Above Owner/Test Drive Car)\n"
+            "8. mileage: в kmpl\n"
+            "9. engine: в CC\n"
+            "10. max_power: в bhp\n"
+            "11. torque: в Nm @ rpm	\n"
+            "12. seats: кол-во сидений\n"
+            ,
         )
     else:
         await callback.message.answer(
-            "Пришлите csv файл, в котором содержатся следующие данные о нескольких автомобилях:",
+            "Пришлите csv файл, в котором содержатся следующие данные о нескольких автомобилях:\n" \
+            "1. name: Имя автомобиля\n" \
+            "2. year: год выпуска\n" \
+            "3. km_driven: сколько километров проехала машина\n" \
+            "4. fuel: тип топлива ()\n" \
+            "5. seller_type: кто продает авто (Individual/Trustmark Dealer/Dealer)\n" \
+            "6. transmission: тип управления (Manual/Automatic)\n"
+            "7. owner: кто владеет автомобилем (First Owner/Second Owner/Third Owner/Fourth & Above Owner/Test Drive Car)\n"
+            "8. mileage: в kmpl\n"
+            "9. engine: в CC\n"
+            "10. max_power: в bhp\n"
+            "11. torque: в Nm @ rpm	\n"
+            "12. seats: кол-во сидений\n"
+            ,
         )
 
 
