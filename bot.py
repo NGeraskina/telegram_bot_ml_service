@@ -14,6 +14,8 @@ from typing import Optional
 from aiogram.filters.callback_data import CallbackData
 from aiogram.enums import ParseMode
 from aiogram import html
+from data_preparation import prepare_data
+import joblib
 
 from config_reader import config
 
@@ -43,6 +45,11 @@ try:
         feedback_ratings = json.load(file)
 except FileNotFoundError:
     feedback_ratings = {}
+
+
+def predict(X):
+    _, _, _, ridge = joblib.load(r'./ridge_model.pickle')
+    return ridge.predict(X)
 
 
 @dp.message(Command("start"))
@@ -90,12 +97,13 @@ async def user_experiense(message: types.Message):
 async def user_experiense(message: types.Message):
     builder = InlineKeyboardBuilder()
     for i in range(1, 3):
-        builder.button(text=str(i) if i ==1 else 'Более 1', callback_data="predict")
+        builder.button(text=str(i) if i == 1 else 'Более 1', callback_data="predict")
     builder.adjust(2)
     await message.answer(
         "Предсказания для скольки автомобилей вы хотите сделать?",
         reply_markup=builder.as_markup(resize_keyboard=True),
     )
+
 
 @dp.callback_query(F.data == "predict")
 async def callbacks_predictors(callback: types.CallbackQuery):
@@ -108,6 +116,7 @@ async def callbacks_predictors(callback: types.CallbackQuery):
             "Пришлите csv файл, в котором содержатся следующие данные о нескольких автомобилях:",
         )
 
+
 @dp.message(F.document)
 async def handle_file(message: types.Message):
     print(message.document)
@@ -119,23 +128,27 @@ async def handle_file(message: types.Message):
         # Read CSV file using pandas
         df = pd.read_csv(file_bytes)
         print(df)
+        print(df.columns)
+        # try:
+        item = prepare_data(df)
+        pred = predict(item)
+        # except:
+        #     await message.answer("Пожалуйста, приложите файл необходимого формата")
 
         # Make predictions using the ML model
         # predictions = model.predict(df)
 
         # Send the predictions back to the user
         if len(df) == 1:
-            result_message = "Предсказанная стоимость автомобиля: 120 000 руб."# + str(predictions)
+            result_message = f"Предсказанная стоимость автомобиля: {pred[0]} руб."
             # await message.answer(result_message, parse_mode=ParseMode.MARKDOWN)
         elif len(df) > 1:
             result_message = 'Предсказанные стоимости автомобилей:'
             for i in range(len(df)):
-                result_message += f"{i+1}: 120 000 руб.\n"
+                result_message += f"{i + 1}: {pred[i]} руб.\n"
         await message.answer(result_message, parse_mode=ParseMode.MARKDOWN)
     else:
         await message.answer("Пожалуйста, приложите файл необходимого формата")
-
-
 
 
 @dp.message(F.text.lower() == "оценить работу сервиса")
