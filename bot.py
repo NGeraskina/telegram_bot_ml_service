@@ -192,6 +192,9 @@ async def callbacks_num_change_fab(callback: types.CallbackQuery, callback_data:
     # print(callback.message)
     rating = callback_data.value
 
+    if user_id not in feedback_ratings:
+        feedback_ratings[user_id] = {}
+
     feedback_ratings[user_id][timestamp] = rating
 
     with open(json_file, 'w') as file:
