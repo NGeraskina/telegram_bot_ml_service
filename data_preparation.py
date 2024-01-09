@@ -126,4 +126,3 @@ def prepare_data(X):
     X['engine_log'] = np.log(X['engine'])
 
     return X
-

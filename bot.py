@@ -15,13 +15,17 @@ from aiogram.enums import ParseMode
 from aiogram import html
 from data_preparation import prepare_data
 import joblib
+import os
 
 from config_reader import config
 
 # Включаем логирование, чтобы не пропустить важные сообщения
 logging.basicConfig(level=logging.INFO)
 
-bot = Bot(token=config.bot_token.get_secret_value())
+try:
+    bot = Bot(token=config.bot_token.get_secret_value())
+except:
+    bot = Bot(token=os.environ.get('BOT_TOKEN'))
 # Диспетчер
 dp = Dispatcher()
 
