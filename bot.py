@@ -58,15 +58,8 @@ def predict(X):
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message):
     user_id = message.from_user.id
-    print(feedback_ratings)
     if user_id not in feedback_ratings:
         feedback_ratings[user_id] = {}
-    await message.answer(
-        "Приветствую! Тут вы можете подать на вход несколько данных о пользователе и получить предсказание")
-
-
-@dp.message(Command("help"))
-async def cmd_special_buttons(message: types.Message):
     builder = ReplyKeyboardBuilder()
     builder.row(
         types.KeyboardButton(text="Как пользоваться этим сервисом"),
@@ -80,11 +73,20 @@ async def cmd_special_buttons(message: types.Message):
     builder.row(types.KeyboardButton(
         text="Вывести статистику по сервису")
     )
-
     await message.answer(
-        "Выберите действие:",
-        reply_markup=builder.as_markup(resize_keyboard=True),
-    )
+        "Приветствую! Тут вы можете подать на вход несколько данных о пользователе и получить предсказание",
+        reply_markup=builder.as_markup(resize_keyboard=True), )
+
+
+@dp.message(Command("help"))
+async def cmd_special_buttons(message: types.Message):
+    text = 'Данный бот умеет:\n' \
+           '• делать предсказания по одному экземпляру-автомобилю (необходимые поля описаны)\n' \
+           '• делать предсказания по батчу автомобилей (необходимые поля описаны)\n' \
+           '• собирать статистику использования бота\n' \
+           '• отправлять собранную статистику использования бота'
+
+    await message.answer(text, parse_mode=ParseMode.MARKDOWN)
 
 
 @dp.message(F.text.lower() == "как пользоваться этим сервисом")
