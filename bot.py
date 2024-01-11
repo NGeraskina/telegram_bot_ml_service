@@ -1,4 +1,3 @@
-import asyncio
 import json
 import logging
 import time
@@ -32,7 +31,7 @@ except:
 # bot = Bot(token=BOT_TOKEN)
 # dp = Dispatcher()
 # dp.middleware.setup(LoggingMiddleware())
-router = Router()
+dp = Dispatcher()
 
 WEBHOOK_HOST = 'https://ml-telegram-bot.onrender.com'
 WEBHOOK_PATH = f'/webhook/{BOT_TOKEN}'
@@ -251,8 +250,7 @@ async def on_shutdown(dp):
 #     asyncio.run(main())
 
 if __name__ == "__main__":
-    dp = Dispatcher()
-    dp.include_router(router)
+
     dp.startup.register(on_startup)
 
     bot = Bot(BOT_TOKEN)
