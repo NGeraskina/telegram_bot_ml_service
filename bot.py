@@ -5,29 +5,40 @@ import time
 
 import pandas as pd
 
-from aiogram import Bot, Dispatcher, types
+from aiogram import Bot, Dispatcher, Router, types
 from aiogram.filters.command import Command
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
+from aiohttp import web
 from magic_filter import F
 from typing import Optional
 from aiogram.filters.callback_data import CallbackData
 from aiogram.enums import ParseMode
-from aiogram import html
 from data_preparation import prepare_data
 import joblib
 import os
+from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
 
 from config_reader import config
 
 # Включаем логирование, чтобы не пропустить важные сообщения
 logging.basicConfig(level=logging.INFO)
 
+
 try:
-    bot = Bot(token=config.bot_token.get_secret_value())
+    BOT_TOKEN = config.bot_token.get_secret_value()
 except:
-    bot = Bot(token=os.environ.get('BOT_TOKEN'))
+    BOT_TOKEN = os.environ.get('BOT_TOKEN')
 # Диспетчер
-dp = Dispatcher()
+# bot = Bot(token=BOT_TOKEN)
+# dp = Dispatcher()
+# dp.middleware.setup(LoggingMiddleware())
+router = Router()
+
+WEBHOOK_HOST = 'https://ml-telegram-bot.onrender.com'
+WEBHOOK_PATH = f'/webhook/{BOT_TOKEN}'
+WEBHOOK_URL = f"{WEBHOOK_HOST}{WEBHOOK_PATH}"
+
+WEBAPP_HOST = '0.0.0.0'
 
 
 class NumbersCallbackFactory(CallbackData, prefix="fabnum"):
@@ -223,9 +234,38 @@ async def feedback_stats(message: types.Message):
     )
 
 
-async def main():
-    await dp.start_polling(bot)
+# async def main():
+#     await dp.start_polling(bot)
 
+
+async def on_startup(bot: Bot) -> None:
+    # If you have a self-signed SSL certificate, then you will need to send a public
+    # certificate to Telegram
+    await bot.set_webhook(f"{WEBHOOK_HOST}{WEBHOOK_PATH}", secret_token=BOT_TOKEN)
+
+async def on_shutdown(dp):
+    # Remove webhook (not strictly necessary, but good practice)
+    await bot.delete_webhook()
+
+# if __name__ == "__main__":
+#     asyncio.run(main())
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    dp = Dispatcher()
+    dp.include_router(router)
+    dp.startup.register(on_startup)
+
+    bot = Bot(BOT_TOKEN)
+
+    app = web.Application()
+
+    webhook_requests_handler = SimpleRequestHandler(
+        dispatcher=dp,
+        bot=bot,
+        secret_token=BOT_TOKEN,
+    )
+    webhook_requests_handler.register(app, path=WEBHOOK_PATH)
+
+    setup_application(app, dp, bot=bot)
+
+    web.run_app(app, host=WEBAPP_HOST, port=10000)
