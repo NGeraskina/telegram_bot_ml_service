@@ -28,7 +28,7 @@ try:
 except:
     BOT_TOKEN = os.environ.get('BOT_TOKEN')
 # Диспетчер
-# bot = Bot(token=BOT_TOKEN)
+bot = Bot(token=BOT_TOKEN)
 # dp = Dispatcher()
 # dp.middleware.setup(LoggingMiddleware())
 dp = Dispatcher()
