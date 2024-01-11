@@ -34,10 +34,8 @@ bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
 WEBHOOK_HOST = 'https://ml-telegram-bot.onrender.com'
-WEBHOOK_PATH = f'/webhook'
-WEBHOOK_URL = f"{WEBHOOK_HOST}{WEBHOOK_PATH}"
-
-WEBAPP_HOST = '0.0.0.0'
+WEBHOOK_PATH = f'/webhook/{BOT_TOKEN}'
+WEBHOOK_URL = f'{WEBHOOK_HOST}{WEBHOOK_PATH}'
 
 
 class NumbersCallbackFactory(CallbackData, prefix="fabnum"):
@@ -238,12 +236,9 @@ async def feedback_stats(message: types.Message):
 
 
 async def on_startup(bot: Bot) -> None:
-    # If you have a self-signed SSL certificate, then you will need to send a public
-    # certificate to Telegram
-    await bot.set_webhook(f"{WEBHOOK_HOST}{WEBHOOK_PATH}", secret_token=BOT_TOKEN)
+    await bot.set_webhook(WEBHOOK_URL)
 
 async def on_shutdown(dp):
-    # Remove webhook (not strictly necessary, but good practice)
     await bot.delete_webhook()
 
 # if __name__ == "__main__":
@@ -252,9 +247,6 @@ async def on_shutdown(dp):
 if __name__ == "__main__":
 
     dp.startup.register(on_startup)
-
-    bot = Bot(BOT_TOKEN)
-
     app = web.Application()
 
     webhook_requests_handler = SimpleRequestHandler(
@@ -266,4 +258,4 @@ if __name__ == "__main__":
 
     setup_application(app, dp, bot=bot)
 
-    web.run_app(app, host=WEBAPP_HOST, port=10000)
+    web.run_app(app, host='0.0.0.0', port=10000)
