@@ -19,9 +19,6 @@ from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_applicati
 
 from config_reader import config
 
-# Включаем логирование, чтобы не пропустить важные сообщения
-logging.basicConfig(level=logging.INFO)
-
 
 try:
     BOT_TOKEN = config.bot_token.get_secret_value()
@@ -29,8 +26,6 @@ except:
     BOT_TOKEN = os.environ.get('BOT_TOKEN')
 # Диспетчер
 bot = Bot(token=BOT_TOKEN)
-# dp = Dispatcher()
-# dp.middleware.setup(LoggingMiddleware())
 dp = Dispatcher()
 
 WEBHOOK_HOST = 'https://ml-telegram-bot.onrender.com'
@@ -82,7 +77,8 @@ async def cmd_start(message: types.Message):
         text="Вывести статистику по сервису")
     )
     await message.answer(
-        "Приветствую! Тут вы можете подать на вход несколько данных о пользователе и получить предсказание",
+        "Приветствую! Тут вы можете подать на вход несколько данных о пользователе и получить предсказание\n"\
+        'чтобы узнать, какие функции умеет бот, напишите /help\n',
         reply_markup=builder.as_markup(resize_keyboard=True), )
 
 
@@ -236,7 +232,7 @@ async def feedback_stats(message: types.Message):
 
 
 async def on_startup(bot: Bot) -> None:
-    await bot.set_webhook(WEBHOOK_URL)
+    await bot.set_webhook(url=WEBHOOK_URL)
 
 async def on_shutdown(dp):
     await bot.delete_webhook()
@@ -244,7 +240,7 @@ async def on_shutdown(dp):
 # if __name__ == "__main__":
 #     asyncio.run(main())
 
-if __name__ == "__main__":
+def main():
 
     dp.startup.register(on_startup)
     app = web.Application()
@@ -259,3 +255,7 @@ if __name__ == "__main__":
     setup_application(app, dp, bot=bot)
 
     web.run_app(app, host='0.0.0.0', port=10000)
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+    main()
