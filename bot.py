@@ -34,7 +34,7 @@ except:
 dp = Dispatcher()
 
 WEBHOOK_HOST = 'https://ml-telegram-bot.onrender.com'
-WEBHOOK_PATH = f'/webhook/{BOT_TOKEN}'
+WEBHOOK_PATH = f'/webhook'
 WEBHOOK_URL = f"{WEBHOOK_HOST}{WEBHOOK_PATH}"
 
 WEBAPP_HOST = '0.0.0.0'
