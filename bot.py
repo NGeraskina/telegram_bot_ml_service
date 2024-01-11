@@ -23,10 +23,10 @@ from config_reader import config
 try:
     BOT_TOKEN = config.bot_token.get_secret_value()
 except:
-    BOT_TOKEN = os.environ.get('BOT_TOKEN')
+    BOT_TOKEN = os.getenv('BOT_TOKEN')
 # Диспетчер
 bot = Bot(token=BOT_TOKEN)
-dp = Dispatcher()
+dp = Dispatcher(bot=bot)
 
 WEBHOOK_HOST = 'https://ml-telegram-bot.onrender.com'
 WEBHOOK_PATH = f'/webhook/{BOT_TOKEN}'
@@ -248,7 +248,6 @@ def main():
     webhook_requests_handler = SimpleRequestHandler(
         dispatcher=dp,
         bot=bot,
-        secret_token=BOT_TOKEN,
     )
     webhook_requests_handler.register(app, path=WEBHOOK_PATH)
 
