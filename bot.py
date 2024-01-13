@@ -1,14 +1,12 @@
 import json
 import logging
 import time
-
 import pandas as pd
-
-from aiogram import Bot, Dispatcher, Router, types
+from aiogram import Bot, Dispatcher, types
 from aiogram.filters.command import Command
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 from aiohttp import web
-from magic_filter import F
+from aiogram import F
 from typing import Optional
 from aiogram.filters.callback_data import CallbackData
 from aiogram.enums import ParseMode
@@ -19,12 +17,11 @@ from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_applicati
 
 from config_reader import config
 
-
 try:
     BOT_TOKEN = config.bot_token.get_secret_value()
 except:
     BOT_TOKEN = os.getenv('BOT_TOKEN')
-# Диспетчер
+
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher(bot=bot)
 
@@ -45,7 +42,6 @@ class PredictorsCallbackFactory(CallbackData, prefix="fabpred"):
 
 json_file = 'feedback_ratings.json'
 
-# Load existing feedback ratings from file
 try:
     with open(json_file, 'r') as file:
         feedback_ratings = json.load(file)
@@ -77,18 +73,19 @@ async def cmd_start(message: types.Message):
         text="Вывести статистику по сервису")
     )
     await message.answer(
-        "Приветствую! Тут вы можете подать на вход несколько данных о пользователе и получить предсказание\n"\
-        'чтобы узнать, какие функции умеет бот, напишите /help\n',
+        "Приветствую! Тут вы можете подать на вход несколько данных о пользователе и получить предсказание\n" \
+        'чтобы узнать, какие функции имеет бот, напишите /help\n' \
+        'если хотите снова увидеть стартоовое меню кнопок, напишите /start\n',
         reply_markup=builder.as_markup(resize_keyboard=True), )
 
 
 @dp.message(Command("help"))
 async def cmd_special_buttons(message: types.Message):
     text = 'Данный бот умеет:\n' \
-           '• делать предсказания по одному экземпляру-автомобилю (необходимые поля описаны)\n' \
-           '• делать предсказания по батчу автомобилей (необходимые поля описаны)\n' \
-           '• собирать статистику использования бота\n' \
-           '• отправлять собранную статистику использования бота'
+           '• делать предсказания по одному экземпляру-автомобилю (необходимые поля описаны) - метод /predict\n' \
+           '• делать предсказания по батчу автомобилей (необходимые поля описаны) - метод /predict\n' \
+           '• собирать статистику использования бота - метод /feedback\n' \
+           '• отправлять собранную статистику использования бота - метод /rating\n'
 
     await message.answer(text, parse_mode=ParseMode.MARKDOWN)
 
@@ -104,6 +101,7 @@ async def user_experiense(message: types.Message):
     await message.answer(text, parse_mode=ParseMode.MARKDOWN)
 
 
+@dp.message(Command("predict"))
 @dp.message(F.text.lower() == "сделать предсказание")
 async def user_experiense(message: types.Message):
     builder = InlineKeyboardBuilder()
@@ -179,6 +177,7 @@ async def handle_file(message: types.Message):
         await message.answer("Пожалуйста, приложите файл необходимого формата")
 
 
+@dp.message(Command("feedback"))
 @dp.message(F.text.lower() == "оценить работу сервиса")
 async def feedback(message: types.Message):
     builder = InlineKeyboardBuilder()
@@ -208,6 +207,7 @@ async def callbacks_num_change_fab(callback: types.CallbackQuery, callback_data:
     await callback.message.answer("Благодарю за отзыв!")
 
 
+@dp.message(Command("rating"))
 @dp.message(F.text.lower() == "вывести статистику по сервису")
 async def feedback_stats(message: types.Message):
     with open(json_file, 'r') as file:
@@ -227,34 +227,33 @@ async def feedback_stats(message: types.Message):
     )
 
 
-# async def main():
-#     await dp.start_polling(bot)
-
-
 async def on_startup(bot: Bot) -> None:
     await bot.set_webhook(url=WEBHOOK_URL)
+
 
 async def on_shutdown(dp):
     await bot.delete_webhook()
 
-# if __name__ == "__main__":
-#     asyncio.run(main())
 
 def main():
-
     dp.startup.register(on_startup)
     app = web.Application()
-
     webhook_requests_handler = SimpleRequestHandler(
         dispatcher=dp,
         bot=bot,
     )
     webhook_requests_handler.register(app, path=WEBHOOK_PATH)
-
     setup_application(app, dp, bot=bot)
-
     web.run_app(app, host='0.0.0.0', port=10000)
+
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     main()
+
+
+# async def main():
+#     await dp.start_polling(bot)
+
+# if __name__ == "__main__":
+#     asyncio.run(main())
