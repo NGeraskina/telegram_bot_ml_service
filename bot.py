@@ -6,6 +6,7 @@ from aiogram import Bot, Dispatcher, types
 from aiogram.filters.command import Command
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 from aiohttp import web
+import asyncio
 from aiogram import F
 from typing import Optional
 from aiogram.filters.callback_data import CallbackData
@@ -14,6 +15,8 @@ from data_preparation import prepare_data
 import joblib
 import os
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
+from aiogram.types import BufferedInputFile
+import io
 
 from config_reader import config
 
@@ -158,11 +161,18 @@ async def handle_file(message: types.Message):
 
         if len(df) == 1:
             result_message = f"Предсказанная стоимость автомобиля {df['name'].values[0]}: {pred[0]:0.0f} руб."
-        elif len(df) > 1:
+            await message.answer(result_message, parse_mode=ParseMode.MARKDOWN)
+        elif 10 > len(df) > 1:
             result_message = 'Предсказанные стоимости автомобилей:\n'
             for i in range(len(df)):
                 result_message += f"{df['name'].values[i]}: {pred[i]:0.0f} руб.\n"
-        await message.answer(result_message, parse_mode=ParseMode.MARKDOWN)
+            await message.answer(result_message, parse_mode=ParseMode.MARKDOWN)
+
+        df['predicted_price'] = pred
+        response_csv = df.to_csv(index=False)
+        predictions = BufferedInputFile(io.BytesIO(response_csv.encode()).getvalue(), filename="predictions.csv")
+        await bot.send_document(message.chat.id, predictions, caption="Полученные предсказания:")
+
     else:
         await message.answer("Пожалуйста, приложите файл необходимого формата")
 
@@ -217,33 +227,33 @@ async def feedback_stats(message: types.Message):
     )
 
 
-async def on_startup(bot: Bot) -> None:
-    await bot.set_webhook(url=WEBHOOK_URL)
+# async def on_startup(bot: Bot) -> None:
+#     await bot.set_webhook(url=WEBHOOK_URL)
+#
+#
+# async def on_shutdown(dp):
+#     await bot.delete_webhook()
 
 
-async def on_shutdown(dp):
-    await bot.delete_webhook()
+# def main():
+#     dp.startup.register(on_startup)
+#     app = web.Application()
+#     webhook_requests_handler = SimpleRequestHandler(
+#         dispatcher=dp,
+#         bot=bot,
+#     )
+#     webhook_requests_handler.register(app, path=WEBHOOK_PATH)
+#     setup_application(app, dp, bot=bot)
+#     web.run_app(app, host='0.0.0.0', port=10000)
+#
+#
+# if __name__ == "__main__":
+#     logging.basicConfig(level=logging.INFO)
+#     main()
 
 
-def main():
-    dp.startup.register(on_startup)
-    app = web.Application()
-    webhook_requests_handler = SimpleRequestHandler(
-        dispatcher=dp,
-        bot=bot,
-    )
-    webhook_requests_handler.register(app, path=WEBHOOK_PATH)
-    setup_application(app, dp, bot=bot)
-    web.run_app(app, host='0.0.0.0', port=10000)
-
+async def main():
+    await dp.start_polling(bot)
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
-    main()
-
-
-# async def main():
-#     await dp.start_polling(bot)
-
-# if __name__ == "__main__":
-#     asyncio.run(main())
+    asyncio.run(main())
