@@ -227,33 +227,33 @@ async def feedback_stats(message: types.Message):
     )
 
 
-# async def on_startup(bot: Bot) -> None:
-#     await bot.set_webhook(url=WEBHOOK_URL)
-#
-#
-# async def on_shutdown(dp):
-#     await bot.delete_webhook()
+async def on_startup(bot: Bot) -> None:
+    await bot.set_webhook(url=WEBHOOK_URL)
 
 
-# def main():
-#     dp.startup.register(on_startup)
-#     app = web.Application()
-#     webhook_requests_handler = SimpleRequestHandler(
-#         dispatcher=dp,
-#         bot=bot,
-#     )
-#     webhook_requests_handler.register(app, path=WEBHOOK_PATH)
-#     setup_application(app, dp, bot=bot)
-#     web.run_app(app, host='0.0.0.0', port=10000)
-#
-#
-# if __name__ == "__main__":
-#     logging.basicConfig(level=logging.INFO)
-#     main()
+async def on_shutdown(dp):
+    await bot.delete_webhook()
 
 
-async def main():
-    await dp.start_polling(bot)
+def main():
+    dp.startup.register(on_startup)
+    app = web.Application()
+    webhook_requests_handler = SimpleRequestHandler(
+        dispatcher=dp,
+        bot=bot,
+    )
+    webhook_requests_handler.register(app, path=WEBHOOK_PATH)
+    setup_application(app, dp, bot=bot)
+    web.run_app(app, host='0.0.0.0', port=10000)
+
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    logging.basicConfig(level=logging.INFO)
+    main()
+
+
+# async def main():
+#     await dp.start_polling(bot)
+#
+# if __name__ == "__main__":
+#     asyncio.run(main())
